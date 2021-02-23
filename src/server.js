@@ -1,39 +1,34 @@
 const http = require('http');
-const htmlHandler = require('./htmlResponses.js');
-const textHandler = require('./textResponses.js');
-const jsonHandler = require('./jsonResponses.js');
-const imageHandler = require('./imageResponses.js');
+const url = require('url');
+const query = require('querystring');
+const responseHandler = require('./responses.js');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
-const onRequest = (request, response) => {
-  console.log(request.url);
+const urlStruct = {
 
-  switch (request.url) {
-    case '/':
-      htmlHandler.getIndex(request, response);
-      break;
-    case '/hello':
-      textHandler.getHello(request, response);
-      break;
-    case '/time':
-      textHandler.getTime(request, response);
-      break;
-    case '/helloJSON':
-      jsonHandler.getHelloJSON(request, response);
-      break;
-    case '/timeJSON':
-      jsonHandler.getTimeJSON(request, response);
-      break;
-    case '/dankmemes':
-      imageHandler.getDankMemes(request, response);
-      break;
-    default:
-      htmlHandler.getIndex(request, response);
-      break;
+  '/': responseHandler.getIndex,
+  '/index': responseHandler.getIndex,
+  '/style.css': responseHandler.getCss,
+  '/success': responseHandler.getSuccess,
+  '/badRequest': responseHandler.getBadRequest,
+  '/unauthorized': responseHandler.getUnauthorized,
+  '/forbidden': responseHandler.getForbidden,
+  '/internal': responseHandler.getInternal,
+  '/notImplemented': responseHandler.getNotImplemented,
+
+};
+
+const onRequest = (request, response) => {
+  const parsedUrl = url.parse(request.url);
+  const acceptedTypes = request.headers.accept.split(',');
+  const params = query.parse(parsedUrl.query);
+
+  if (urlStruct[parsedUrl.pathname]) {
+    urlStruct[parsedUrl.pathname](request, response, acceptedTypes, params);
+  } else {
+    responseHandler.getDoesNotExist(request, response, acceptedTypes, params);
   }
 };
 
 http.createServer(onRequest).listen(port);
-
-console.log(`Listening on 127.0.0.1: ${port}`);

@@ -7,6 +7,47 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script type="text/babel">
 
+    const handleResponse = (xhr) => {
+      const content = document.querySelector('#content');
+      const type = xhr.getResponseHeader('content-type');
+      
+      let message = "";
+      if(type === 'application/json')
+      {
+        let obj = JSON.parse(xhr.response);
+        message = obj.message;
+      }
+      else if(type === 'text/xml')
+      {
+        message = xhr.responseXML.querySelector('message').textContent;
+      }
+
+      content.innerHTML = `<h1>${ xhr.statusText }</h1><p>Message: ${ message }</p>`;
+    }
+
+    const sendAjax = () =>{
+
+      const url = document.querySelector('#page').value;
+      const type = document.querySelector('#type').value;
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', url);
+      xhr.setRequestHeader('Accept', type);
+
+      xhr.onload = () => handleResponse(xhr);
+
+      xhr.send();
+    };
+    
+    const init = () => {
+
+      const submitButton = document.querySelector("#send");
+      submitButton.addEventListener('click', sendAjax);
+
+    };
+
+    window.onload = init;
+
   </script>
 </head>
 <body>
